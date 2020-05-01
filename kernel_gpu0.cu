@@ -16,21 +16,21 @@ __global__ void spmspm(COOMatrix *result, CSRMatrix *A, CSCMatrix *B, float bias
 	unsigned int c = blockIdx.x*blockDim.x + threadIdx.x;
 
 
-	if (r < A.numRows && c < B.numCols) {
-		unsigned int rowPtrA = A.rowPtrs[r];
-		unsigned int nnzA = A.rowPtrs[r + 1] - rowPtrA;
+	if (r < A->numRows && c < B->numCols) {
+		unsigned int rowPtrA = A->rowPtrs[r];
+		unsigned int nnzA = A->rowPtrs[r + 1] - rowPtrA;
 
-		unsigned int colPtrB = B.colPtrs[c];
-		unsigned int nnzB = B.colPtrs[c + 1] - colPtrB;
+		unsigned int colPtrB = B->colPtrs[c];
+		unsigned int nnzB = B->colPtrs[c + 1] - colPtrB;
 		if (nnzA > 0 && nnzB > 0) { // if a row is not all zeros , we do computation otherwise we skip row
 
 			float sum = 0.0f;
 			unsigned int ia = 0, ib = 0;
 			while (ia < nnzA && ib < nnzB) { // loops over all non zeros from A and B and stop when there is no more non zero
 
-				unsigned int colIdx = A.colIdxs[rowPtrA + ia]; //single item col index from A
-				unsigned int rowIdx = B.rowIdxs[colPtrB + ib]; //single item row index from B
-				if (rowIdx < B.nnz && colIdx < A.nnz) {
+				unsigned int colIdx = A->colIdxs[rowPtrA + ia]; //single item col index from A
+				unsigned int rowIdx = B->rowIdxs[colPtrB + ib]; //single item row index from B
+				if (rowIdx < B->nnz && colIdx < A->nnz) {
 					if (colIdx < rowIdx) {
 						ia++;
 					}
@@ -38,7 +38,7 @@ __global__ void spmspm(COOMatrix *result, CSRMatrix *A, CSCMatrix *B, float bias
 						ib++;
 					}
 					else {
-						sum += A.values[rowPtrA + ia] * B.values[ib + colPtrB];// do the multiplication of the row that matches the column
+						sum += A->values[rowPtrA + ia] * B->values[ib + colPtrB];// do the multiplication of the row that matches the column
 						ia++;
 						ib++;
 					}
@@ -205,7 +205,7 @@ void sparseNN(Vector* result, COOMatrix* featureVectors, COOMatrix** layerWeight
         startTime(&timer);
         // TODO: spmspm <<< ..., ... >>> (Yout_d, Yin_d, W_d[layer], bias);
         dim3 numThreadsPerBlock3(threads, threads);
-		dim3 numBlocks3((W[layer].numCols + numThreadsPerBlock3.x - 1) / numThreadsPerBlock3.x, (Yin->numRows + numThreadsPerBlock3.y - 1) / numThreadsPerBlock3.y);
+		dim3 numBlocks3((W[layer]->numCols + numThreadsPerBlock3.x - 1) / numThreadsPerBlock3.x, (Yin->numRows + numThreadsPerBlock3.y - 1) / numThreadsPerBlock3.y);
 
 		spmspm << <numBlocks3, numThreadsPerBlock3 >> > (Yout_d, Yin_d, W_d[layer], bias);
 
