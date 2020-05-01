@@ -205,7 +205,7 @@ void sparseNN(Vector* result, COOMatrix* featureVectors, COOMatrix** layerWeight
         startTime(&timer);
         // TODO: spmspm <<< ..., ... >>> (Yout_d, Yin_d, W_d[layer], bias);
         dim3 numThreadsPerBlock3(threads, threads);
-		dim3 numBlocks3((W[layer]->numCols + numThreadsPerBlock3.x - 1) / numThreadsPerBlock3.x, (Yin->numRows + numThreadsPerBlock3.y - 1) / numThreadsPerBlock3.y);
+		dim3 numBlocks3((W[layer]->numCols + numThreadsPerBlock3.x - 1) / numThreadsPerBlock3.x, (Y0->numRows + numThreadsPerBlock3.y - 1) / numThreadsPerBlock3.y);
 
 		spmspm << <numBlocks3, numThreadsPerBlock3 >> > (Yout_d, Yin_d, W_d[layer], bias);
 
