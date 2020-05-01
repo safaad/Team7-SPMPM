@@ -52,7 +52,7 @@ __global__ void spmspm(COOMatrix *result, CSRMatrix *A, CSCMatrix *B, float bias
 					if (sum > YMAX) { //make sure it is on an upper limit
 						sum = YMAX;
 					}
-					unsigned int nnzIndxTemp = atomicAdd(result->nnz, 1); //counts how many non zero elements I have
+					unsigned int nnzIndxTemp = atomicAdd(&(result->nnz), 1); //counts how many non zero elements I have
 					result->rowIdxs[nnzIndxTemp] = r;
 					result->colIdxs[nnzIndxTemp] = c;
 					result->values[nnzIndxTemp] = sum;
@@ -205,7 +205,7 @@ void sparseNN(Vector* result, COOMatrix* featureVectors, COOMatrix** layerWeight
         startTime(&timer);
         // TODO: spmspm <<< ..., ... >>> (Yout_d, Yin_d, W_d[layer], bias);
         dim3 numThreadsPerBlock3(threads, threads);
-		dim3 numBlocks3((W_d[layer].numCols + numThreadsPerBlock3.x - 1) / numThreadsPerBlock3.x, (Yin_d.numRows + numThreadsPerBlock3.y - 1) / numThreadsPerBlock3.y);
+		dim3 numBlocks3((W[layer].numCols + numThreadsPerBlock3.x - 1) / numThreadsPerBlock3.x, (Yin->numRows + numThreadsPerBlock3.y - 1) / numThreadsPerBlock3.y);
 
 		spmspm << <numBlocks3, numThreadsPerBlock3 >> > (Yout_d, Yin_d, W_d[layer], bias);
 
