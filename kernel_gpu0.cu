@@ -24,27 +24,47 @@ __global__ void spmspm(COOMatrix *result, CSRMatrix *A, CSCMatrix *B, float bias
 		unsigned int nnzB = B->colPtrs[c + 1] - colPtrB;
 		if (nnzA > 0 && nnzB > 0) { // if a row is not all zeros , we do computation otherwise we skip row
 
-			float sum = 0.0f;
-			unsigned int ia = 0, ib = 0;
-			while (ia < nnzA && ib < nnzB) { // loops over all non zeros from A and B and stop when there is no more non zero
+			//float sum = 0.0f;
+			//unsigned int ia = 0, ib = 0;
+			//while (ia < nnzA && ib < nnzB) { // loops over all non zeros from A and B and stop when there is no more non zero
+                unsigned int* colIdxsA = A->colIdxs + rowPtrA;
+                float* valueA = A->values + rowPtrA;
+                unsigned int* rowIdxsB = B->rowIdxs + colPtrB;
+                float* valueB = B->values + colPtrB;
 
-				unsigned int colIdx = A->colIdxs[rowPtrA + ia]; //single item col index from A
-				unsigned int rowIdx = B->rowIdxs[colPtrB + ib]; //single item row index from B
-				if (rowIdx < B->nnz && colIdx < A->nnz) {
-					if (colIdx < rowIdx) {
-						ia++;
-					}
-					else if (colIdx > rowIdx) {
-						ib++;
-					}
-					else {
-						sum += A->values[rowPtrA + ia] * B->values[ib + colPtrB];// do the multiplication of the row that matches the column
-						ia++;
-						ib++;
-					}
-				}
+				// unsigned int colIdx = A->colIdxs[rowPtrA + ia]; //single item col index from A
+				// unsigned int rowIdx = B->rowIdxs[colPtrB + ib]; //single item row index from B
+				// if (rowIdx < B->nnz && colIdx < A->nnz) {
+				// 	if (colIdx < rowIdx) {
+				// 		ia++;
+				// 	}
+				// 	else if (colIdx > rowIdx) {
+				// 		ib++;
+				// 	}
+				// 	else {
+				// 		sum += A->values[rowPtrA + ia] * B->values[ib + colPtrB];// do the multiplication of the row that matches the column
+				// 		ia++;
+				// 		ib++;
+				// 	}
+                // }
+                float sum = 0.0f;
+                unsigned int ia = 0, ib = 0;
+                while(ia < nnzA && ib < nnzB) {
+                    unsigned int colIdx = colIdxsA[ia];
+                    unsigned int rowIdx = rowIdxsB[ib];
+                    if(colIdx < rowIdx) {
+                        ia++;
+                    } else if(colIdx > rowIdx) {
+                        ib++;
+                    } else {
+                        sum += valueA[ia]*valueB[ib];
+                        ia++;
+                        ib++;
+                    }
+                }    
 
-			}
+
+			//}
 			if (sum > THRESHOLD || sum < -THRESHOLD) { //if not smaller than abs(threshold)
 				sum += bias; //add to it the bias
 				//Remove negative and zero values
